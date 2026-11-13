@@ -23,3 +23,5 @@ az webapp deploy -g "$RESOURCE_GROUP" -n "$APP_NAME" --src-path "$stage/app.zip"
 ```
 
 Run `./commands.sh predict "$RESOURCE_GROUP" "$APP_NAME"` to verify the HTTPS endpoint. The initial response was HTTP 200 with `{"prediction":[2.431574790057212]}` and `X-Revision` matching commit `b91c16b`.
+
+`commands.sh bootstrap` packages the checked-out commit and runs this sequence. Set `AZURE_PLAN` and `AZURE_SKU` before running it. `AZURE_LOCATION` defaults to the resource group's location. `bootstrap-legacy` retains the original `az webapp up` command referenced in the rubric.
