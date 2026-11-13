@@ -1,0 +1,29 @@
+2026-11-13 09:20:31 UTC
+File Name                                             Modified             Size
+app.py                                         2026-11-13 10:13:48         1911
+requirements.txt                               2026-11-13 10:13:46          106
+Housing_price_model/LinearRegression.joblib    2026-11-13 10:12:42          664
+revision.txt                                   2026-11-13 10:20:30           65
+Packaged source fingerprint: b716e192f947aeb94763e5cb7563f77d5005b95eb8991afc709e11a932706d6f
+{"prediction":[2.431574790057212]}
+HTTP/1.1 200 OK
+Server: gunicorn
+Date: Fri, 13 Nov 2026 09:20:33 GMT
+Connection: close
+Content-Type: application/json
+Content-Length: 35
+X-Revision: b716e192f947aeb94763e5cb7563f77d5005b95eb8991afc709e11a932706d6f
+
+Packaged HTTP response and revision verified.
+[2026-11-13 10:20:31 +0100] [52] [INFO] Starting gunicorn 23.0.0
+[2026-11-13 10:20:31 +0100] [52] [INFO] Listening at: http://127.0.0.1:8000 (52)
+[2026-11-13 10:20:31 +0100] [52] [INFO] Using worker: sync
+[2026-11-13 10:20:31 +0100] [55] [INFO] Booting worker with pid: 55
+/workspace/scratch/cd124bb5c853/build/venv/lib/python3.12/site-packages/sklearn/base.py:376: InconsistentVersionWarning: Trying to unpickle estimator LinearRegression from version 1.1.3 when using version 1.5.1. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+  warnings.warn(
+127.0.0.1 - - [13/Nov/2026:10:20:33 +0100] "GET / HTTP/1.1" 200 32 "-" "curl/8.14.1"
+[2026-11-13 10:20:33,866] INFO in app: Prediction completed revision=b716e192f947aeb94763e5cb7563f77d5005b95eb8991afc709e11a932706d6f rows=1
+127.0.0.1 - - [13/Nov/2026:10:20:33 +0100] "POST /predict HTTP/1.1" 200 35 "-" "curl/8.14.1"
+[2026-11-13 10:20:33,886] INFO in app: Prediction completed revision=b716e192f947aeb94763e5cb7563f77d5005b95eb8991afc709e11a932706d6f rows=1
+127.0.0.1 - - [13/Nov/2026:10:20:33 +0100] "POST /predict HTTP/1.1" 200 35 "-" "curl/8.14.1"

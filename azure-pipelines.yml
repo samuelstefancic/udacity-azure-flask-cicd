@@ -1,0 +1,94 @@
+trigger:
+  batch: true
+  branches:
+    include: [main]
+
+pr: none
+
+parameters:
+  - name: agentPool
+    type: string
+    default: udacity-linux
+  - name: azureServiceConnection
+    type: string
+    default: udacity-app-service
+
+pool:
+  name: ${{ parameters.agentPool }}
+
+stages:
+  - stage: Validate
+    jobs:
+      - job: TestAndPackage
+        timeoutInMinutes: 15
+        workspace:
+          clean: all
+        steps:
+          - checkout: self
+            clean: true
+          - bash: |
+              set -euo pipefail
+              venv=$(mktemp -d "$(Agent.TempDirectory)/agile-XXXXXX")
+              trap 'rm -rf -- "$venv"' EXIT
+              python3.12 -m venv "$venv"
+              source "$venv/bin/activate"
+              make all
+              python package_app.py "$(Build.ArtifactStagingDirectory)/app-service.zip" "$BUILD_SOURCEVERSION"
+              cp sample-prediction.json "$(Build.ArtifactStagingDirectory)/sample-prediction.json"
+            displayName: Install, lint, test and package
+          - publish: $(Build.ArtifactStagingDirectory)
+            artifact: app-service
+
+  - stage: Deploy
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: DeployAndVerify
+        timeoutInMinutes: 20
+        steps:
+          - checkout: none
+          - download: current
+            artifact: app-service
+          - task: AzureCLI@2
+            displayName: Deploy and verify the running revision
+            inputs:
+              azureSubscription: ${{ parameters.azureServiceConnection }}
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                : "${APP_RESOURCE_GROUP:?Set appResourceGroup in the Azure pipeline variables.}"
+                : "${APP_SERVICE_NAME:?Set appServiceName in the Azure pipeline variables.}"
+                artifact="$(Pipeline.Workspace)/app-service"
+                az webapp deploy -g "$APP_RESOURCE_GROUP" -n "$APP_SERVICE_NAME" \
+                  --src-path "$artifact/app-service.zip" --type zip --track-status true --timeout 720000
+                hostname=$(az webapp show -g "$APP_RESOURCE_GROUP" -n "$APP_SERVICE_NAME" \
+                  --query defaultHostName -o tsv)
+                test -n "$hostname"
+                printf 'Testing https://%s/predict\n' "$hostname"
+                headers=$(mktemp)
+                response=$(mktemp)
+                trap 'rm -f -- "$headers" "$response"' EXIT
+                curl --fail-with-body --silent --show-error --max-time 30 \
+                  --retry 6 --retry-delay 5 --retry-all-errors \
+                  -D "$headers" -o "$response" \
+                  -H 'Content-Type: application/json' \
+                  --data-binary "@$artifact/sample-prediction.json" "https://$hostname/predict"
+                python3.12 - "$headers" "$response" "$BUILD_SOURCEVERSION" <<'PY'
+                import json
+                import math
+                import sys
+                from pathlib import Path
+
+                headers = Path(sys.argv[1]).read_text().splitlines()
+                revision = next((line.split(':', 1)[1].strip() for line in headers
+                                 if line.lower().startswith('x-revision:')), None)
+                result = json.loads(Path(sys.argv[2]).read_text())
+                values = result['prediction']
+                if revision != sys.argv[3] or len(values) != 1 or not math.isclose(values[0], 2.431574790057212):
+                    raise SystemExit(f'Unexpected prediction or revision: {result}, {revision}')
+                print(f'Verified {revision}: {result}')
+                PY
+            env:
+              APP_RESOURCE_GROUP: $(appResourceGroup)
+              APP_SERVICE_NAME: $(appServiceName)
