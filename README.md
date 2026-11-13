@@ -29,7 +29,7 @@ From a second terminal, run `./make_prediction.sh`. The expected response is `{"
 ## Run on Azure
 
 1. Push the project to GitHub and confirm the CI workflow is green. Clone the same commit into Azure Cloud Shell, activate a Python 3.12 environment and run `make all` followed by `make test`.
-2. In the Udacity subscription, use the existing resource group and pick the SKU allowed by your lab. Set `AZURE_SKU` and run `./commands.sh bootstrap "$RESOURCE_GROUP" "$APP_NAME"` from the clone. The script uses `az webapp up`, configures the Python build and startup command, and prints the actual HTTPS endpoint.
+2. In the Udacity subscription, provision the Linux App Service and deploy the initial ZIP using the [Azure CLI steps](docs/azure-bootstrap.md). These are the commands verified on the lab subscription.
 3. In Azure DevOps, connect the GitHub repository and create a pipeline from `azure-pipelines.yml`. Set variables `appResourceGroup` and `appServiceName`. The file defaults to a Linux agent pool named `udacity-linux` and an Azure Resource Manager service connection named `udacity-app-service`. Use those names or set the corresponding YAML parameters. On a self-hosted lab agent, install Python 3.12 with `venv`, Make, Azure CLI and curl. Use a project-specific connection scoped to the lab resource group and authorize it for this pipeline.
 4. Run the pipeline on `main`. `Validate` runs the checks and packages the current commit. `Deploy` uses the artifact from that run, calls `/predict` and compares `X-Revision` to the pipeline commit.
 5. Run `./commands.sh predict "$RESOURCE_GROUP" "$APP_NAME"` from Cloud Shell. Run `./commands.sh logs "$RESOURCE_GROUP" "$APP_NAME"` in a second Cloud Shell window to see the request and prediction logs.
@@ -43,7 +43,18 @@ Python and Azure references are available in the [App Service quickstart](https:
 - [Screencast outline](docs/demo.md). The recording and its link are pending.
 - [Local build and tests](preuves/make-all.log) and [HTTP run from the unpacked deployment artifact](preuves/packaged-http.log).
 
-The Udacity submission still needs real captures of the Cloud Shell clone, `make all`, `make test`, the GitHub Actions build and badge, Azure Pipelines, App Service and the remote prediction from Cloud Shell. The project uses [rubric 2860](https://learn.udacity.com/rubric/2860).
+The screenshots below show commit `b91c16b`. The App Service screenshots come from the initial deployment via Azure CLI. The automated Azure Pipelines run, live Trello board link and final screencast are pending. See [Udacity rubric 2860](https://learn.udacity.com/rubric/2860).
+
+### Cloud Shell and GitHub Actions
+
+- [Repository cloned in Cloud Shell](preuves/azure-cloud-shell-clone.jpg)
+- [Passing build and standalone tests in Cloud Shell](preuves/azure-cloud-shell-build-tests.jpg)
+- [GitHub Actions run #1](https://github.com/samuelstefancic/udacity-azure-flask-cicd/actions/runs/43404506704) and [job screenshot](preuves/github-actions-run-1.jpg)
+
+### Initial App Service deployment
+
+- [Azure App Service overview](preuves/azure-app-service-overview.jpg)
+- [HTTPS prediction from Cloud Shell](preuves/azure-app-service-prediction.jpg), HTTP 200 with the deployed commit in `X-Revision`.
 
 ## Model and next improvement
 
